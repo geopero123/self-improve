@@ -2,7 +2,7 @@ import type { LLMClient, LLMRequest, LLMResult } from "./index.js";
 import { parseResponse } from "./parseResponse.js";
 import { buildPrompt } from "./prompt.js";
 
-const DEFAULT_MODEL = "openai/gpt-oss-120b";
+const DEFAULT_MODEL = "llama-3.1-8b-instant";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 interface GroqChatResponse {
