@@ -5,7 +5,8 @@ import { verify } from "./verify.js";
 import { promote } from "./promote.js";
 import { rollback } from "./rollback.js";
 import { registerPending } from "./pending.js";
-import { collectSourceFiles } from "./sourceContext.js";
+import { listSourcePaths, readSourceFiles } from "./sourceContext.js";
+import { selectRelevantFiles } from "./selectFiles.js";
 import type { TrialInfo, VerifyStep } from "./types.js";
 
 export interface SelfImproveOutcome {
@@ -33,7 +34,7 @@ export async function runSelfImprove(
     requireApproval: boolean
 ): Promise<SelfImproveOutcome> {
     const baseCommit = await snapshot();
-    const contextFiles = await collectSourceFiles();
+    const allPaths = await listSourcePaths();
 
     let lastError: string | undefined;
 
@@ -41,6 +42,9 @@ export async function runSelfImprove(
         const fullInstruction = lastError
             ? `${instruction}\n\nYour previous attempt failed verification with this output:\n${lastError}\n\nFix the issue and try again.`
             : instruction;
+
+        const selectedPaths = await selectRelevantFiles(llm, fullInstruction, allPaths);
+        const contextFiles = await readSourceFiles(selectedPaths);
 
         const result = await llm.generate({
             instruction: fullInstruction,

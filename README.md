@@ -46,7 +46,7 @@ npm run dev
 ## Notes / limitations (MVP)
 
 - Generated apps and self-edits currently can't add new npm dependencies — keeps `npm install` out of the hot path so builds stay fast and predictable. Ask it to work with what's already installed, or add dependencies yourself and re-run `npm install`.
-- The self-improve step sends your whole `src/`, `public/`, and `tests/` tree to the model as context each time. Fine at this codebase's current size; will need chunking if the codebase grows a lot.
+- Self-improve uses a two-step context strategy to stay within free-tier token limits: first a cheap call with just a file-path listing asks the model which files it needs, then only those files' content is sent for the actual edit (capped at 6 files). This keeps individual requests small regardless of overall codebase size, but very broad asks that genuinely need many files at once may still need to be split into smaller instructions.
 - Generated apps are in-memory only in the registry — restarting `npm start` stops them (their files stay on disk under `generated-apps/`, but they won't auto-restart yet).
 - API keys are loaded from `.env` via a small built-in loader — no `dotenv` dependency needed.
 - The default Groq model may change on Groq's end over time — check [console.groq.com/docs/models](https://console.groq.com/docs/models) if you see model-not-found errors, and set `GROQ_MODEL` in `.env` to override.
