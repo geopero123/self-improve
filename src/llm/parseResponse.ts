@@ -28,13 +28,39 @@ export function parseResponse(text: string): LLMResult {
         ) {
             throw new Error(`files[${i}] is missing a string "path" or "content"`);
         }
-        return { path: (f as LLMFile).path, content: (f as LLMFile).content };
+        const file = { path: (f as LLMFile).path, content: (f as LLMFile).content };
+        const doubleEncoded = looksDoubleEncoded(file.content);
+        if (doubleEncoded) {
+            throw new Error(
+                `files[${i}] ("${file.path}") content ${doubleEncoded} - it looks like the file was ` +
+                    "JSON-stringified into the \"content\" value instead of written as plain text. Write the " +
+                    "actual file content directly as the JSON string value (with real \\n escapes for newlines " +
+                    "in the JSON itself), not a second layer of encoding."
+            );
+        }
+        return file;
     });
 
     return {
         summary: typeof raw.summary === "string" ? raw.summary : "",
         files
     };
+}
+
+/**
+ * Detects a real incident: the model wrapped a whole file's real content in an extra layer of
+ * JSON-string encoding, so the actual bytes were things like literal `\n` two-character sequences
+ * instead of real newlines, with the whole thing wrapped in a stray leading `{"` / trailing `"`.
+ * Multi-line files (>200 chars) with zero real newlines but literal "\n" sequences are the tell.
+ */
+function looksDoubleEncoded(content: string): string | null {
+    if (content.length < 200) return null;
+    const hasRealNewline = content.includes("\n");
+    const hasLiteralEscapedNewline = content.includes("\\n");
+    if (!hasRealNewline && hasLiteralEscapedNewline) {
+        return "contains literal \\n escape sequences but no real newline characters";
+    }
+    return null;
 }
 
 /** Strips markdown code fences if the model wrapped the JSON in them despite instructions. */
