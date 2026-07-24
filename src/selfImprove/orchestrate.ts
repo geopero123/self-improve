@@ -1,4 +1,5 @@
 import type { LLMClient } from "../llm/index.js";
+import { RateLimitError } from "../llm/index.js";
 import { snapshot } from "./snapshot.js";
 import { createTrial } from "./trial.js";
 import { verify } from "./verify.js";
@@ -17,6 +18,11 @@ export interface SelfImproveOutcome {
 }
 
 const MAX_ATTEMPTS = 3;
+const MAX_BACKOFF_MS = 30_000;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const SYSTEM_CONTEXT =
     "You are editing your OWN source code (a Node.js/TypeScript agent). " +
@@ -47,6 +53,10 @@ export async function runSelfImprove(
         try {
             selectedPaths = await selectRelevantFiles(llm, fullInstruction, allPaths);
         } catch (err) {
+            if (err instanceof RateLimitError) {
+                await sleep(Math.min(err.retryAfterMs, MAX_BACKOFF_MS) + 500);
+                continue;
+            }
             lastError = `File selection step failed: ${err instanceof Error ? err.message : String(err)}`;
             continue;
         }
@@ -60,6 +70,10 @@ export async function runSelfImprove(
                 systemContext: SYSTEM_CONTEXT
             });
         } catch (err) {
+            if (err instanceof RateLimitError) {
+                await sleep(Math.min(err.retryAfterMs, MAX_BACKOFF_MS) + 500);
+                continue;
+            }
             lastError = err instanceof Error ? err.message : String(err);
             continue;
         }
@@ -90,5 +104,5 @@ export async function runSelfImprove(
         return { status: "promoted", trial, verifySteps: verifyResult.steps };
     }
 
-    return { status: "failed", reason: lastError ?? "Unknown failure" };
+    return { status: "failed", reason: lastError ?? "Rate limited repeatedly - wait a bit and try again." };
 }

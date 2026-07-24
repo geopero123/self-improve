@@ -25,6 +25,7 @@ export interface LLMClient {
 
 export { GeminiClient } from "./gemini.js";
 export { GroqClient } from "./groq.js";
+export { RateLimitError } from "./errors.js";
 
 /** Picks the LLM backend from env: LLM_PROVIDER=groq (default, free no-card tier) or gemini. */
 export function createLLMClient(): LLMClient {

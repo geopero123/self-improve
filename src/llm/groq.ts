@@ -1,6 +1,7 @@
 import type { LLMClient, LLMRequest, LLMResult } from "./index.js";
 import { parseResponse } from "./parseResponse.js";
 import { buildPrompt } from "./prompt.js";
+import { RateLimitError } from "./errors.js";
 
 const DEFAULT_MODEL = "llama-3.1-8b-instant";
 const API_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -38,6 +39,9 @@ export class GroqClient implements LLMClient {
 
         if (!res.ok) {
             const body = await res.text();
+            if (res.status === 429) {
+                throw new RateLimitError(`Groq API error 429: ${body}`, parseRetryAfterMs(res, body));
+            }
             throw new Error(`Groq API error ${res.status}: ${body}`);
         }
 
@@ -45,4 +49,19 @@ export class GroqClient implements LLMClient {
         const text = data.choices?.[0]?.message?.content ?? "";
         return parseResponse(text);
     }
+}
+
+const DEFAULT_RETRY_AFTER_MS = 15_000;
+
+function parseRetryAfterMs(res: Response, body: string): number {
+    const header = res.headers.get("retry-after");
+    if (header) {
+        const seconds = Number(header);
+        if (!Number.isNaN(seconds)) return seconds * 1000;
+    }
+
+    const match = body.match(/try again in ([\d.]+)s/i);
+    if (match) return Math.ceil(parseFloat(match[1]) * 1000);
+
+    return DEFAULT_RETRY_AFTER_MS;
 }
