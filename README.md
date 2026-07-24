@@ -7,16 +7,18 @@ A personal, self-hosted coding agent. It can:
 
 ## Setup
 
-1. Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) (no credit card required for the free tier).
+1. Get a free Groq API key at [console.groq.com/keys](https://console.groq.com/keys) — no credit card, works immediately. (Gemini's free tier requires billing/prepay to be set up in some regions, so Groq is the default here.)
 2. Copy `.env.example` to `.env` and paste your key in:
    ```
    copy .env.example .env
    ```
-   Then edit `.env` and set `GEMINI_API_KEY=your-key-here`.
+   Then edit `.env` and set `GROQ_API_KEY=your-key-here`.
 3. Install dependencies (already done if you just scaffolded this):
    ```
    npm install
    ```
+
+To use Gemini instead, set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...` in `.env`.
 
 ## Running it
 
@@ -46,4 +48,5 @@ npm run dev
 - Generated apps and self-edits currently can't add new npm dependencies — keeps `npm install` out of the hot path so builds stay fast and predictable. Ask it to work with what's already installed, or add dependencies yourself and re-run `npm install`.
 - The self-improve step sends your whole `src/`, `public/`, and `tests/` tree to the model as context each time. Fine at this codebase's current size; will need chunking if the codebase grows a lot.
 - Generated apps are in-memory only in the registry — restarting `npm start` stops them (their files stay on disk under `generated-apps/`, but they won't auto-restart yet).
-- `GEMINI_API_KEY` is loaded from `.env` via a small built-in loader — no `dotenv` dependency needed.
+- API keys are loaded from `.env` via a small built-in loader — no `dotenv` dependency needed.
+- The default Groq model (`qwen/qwen3-32b`) may change on Groq's end over time — check [console.groq.com/docs/models](https://console.groq.com/docs/models) if you see model-not-found errors, and set `GROQ_MODEL` in `.env` to override.

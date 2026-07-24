@@ -3,7 +3,7 @@ loadEnv();
 
 import express from "express";
 import { PUBLIC_DIR } from "./paths.js";
-import { GeminiClient, type LLMClient } from "./llm/index.js";
+import { createLLMClient, type LLMClient } from "./llm/index.js";
 import { runSelfImprove, approvePending, rejectPending } from "./selfImprove/index.js";
 import { generateApp, listApps } from "./apps/index.js";
 import { appsRouter } from "./proxy.js";
@@ -15,11 +15,7 @@ const REQUIRE_APPROVAL = process.env.SELF_IMPROVE_AUTO !== "1";
 let llmInstance: LLMClient | null = null;
 function getLLM(): LLMClient {
     if (!llmInstance) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not set. Copy .env.example to .env and add your key.");
-        }
-        llmInstance = new GeminiClient(apiKey);
+        llmInstance = createLLMClient();
     }
     return llmInstance;
 }
