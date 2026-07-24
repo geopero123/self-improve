@@ -1,12 +1,25 @@
-import { spawn } from "node:child_process";
+import { spawn, execFile, type ChildProcess } from "node:child_process";
 import type { TrialInfo, VerifyResult, VerifyStep } from "./types.js";
+
+/**
+ * child.kill() only terminates the immediate process. On Windows that process is a cmd.exe
+ * wrapper (since we spawn with shell:true there), so the real node.exe underneath survives
+ * as an orphan unless we kill the whole tree via taskkill.
+ */
+function killTree(child: ChildProcess): void {
+    if (process.platform === "win32" && child.pid) {
+        execFile("taskkill", ["/pid", String(child.pid), "/T", "/F"], () => {});
+    } else {
+        child.kill();
+    }
+}
 
 function run(cmd: string, args: string[], cwd: string, timeoutMs = 60_000): Promise<{ ok: boolean; output: string }> {
     return new Promise(resolve => {
         const child = spawn(cmd, args, { cwd, shell: process.platform === "win32" });
         let output = "";
         const timer = setTimeout(() => {
-            child.kill();
+            killTree(child);
             resolve({ ok: false, output: output + "\n[timed out]" });
         }, timeoutMs);
 
@@ -43,7 +56,7 @@ async function bootCheck(dir: string): Promise<{ ok: boolean; output: string }> 
             settled = true;
             clearTimeout(timeoutTimer);
             clearInterval(poller);
-            child.kill();
+            killTree(child);
             resolve({ ok, output: output + (extra ? `\n${extra}` : "") });
         };
 
