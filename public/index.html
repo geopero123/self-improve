@@ -1,4 +1,23 @@
-<!-- ... (unchanged) -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>self-agent</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<h1>self-agent</h1>
+<p>This is the bare starting UI. Ask it to design its own via "Improve yourself" below.</p>
+
+<section>
+<h2>Build an app</h2>
+<form id="build-form">
+    <textarea id="build-instruction" placeholder="Describe the app you want, e.g. 'a simple todo list'"></textarea>
+    <button type="submit">Build</button>
+</form>
+</section>
+
 <section>
 <h2>Improvement prompt</h2>
 <p>Changes are trialed and tested in isolation first. If approval is required, you'll see an Approve/Reject prompt below before anything goes live.</p>
@@ -7,3 +26,22 @@
     <button type="submit">Submit</button>
 </form>
 </section>
+
+<section>
+<h2>Hosted apps</h2>
+<ul id="apps-list"><li>(none yet)</li></ul>
+</section>
+
+<section>
+<h2>Pending approval</h2>
+<div id="pending-list">(none)</div>
+</section>
+
+<section>
+<h2>Activity log</h2>
+<div id="activity-log"></div>
+</section>
+
+<script src="./app.js"></script>
+</body>
+</html>

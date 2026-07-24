@@ -68,14 +68,38 @@ async function bootCheck(dir: string): Promise<{ ok: boolean; output: string }> 
 
         const poller = setInterval(() => {
             fetch(`http://127.0.0.1:${port}/health`)
-                .then(res => {
-                    if (res.ok) finish(true);
+                .then(res => (res.ok ? checkUiIntegrity(port) : undefined))
+                .then(uiIssue => {
+                    if (uiIssue === undefined) return; // health not up yet, or check already handled
+                    if (uiIssue === null) finish(true);
+                    else finish(false, uiIssue);
                 })
                 .catch(() => {
                     // not up yet, keep polling
                 });
         }, 400);
     });
+}
+
+/**
+ * Beyond "does the server process boot", this checks the served UI page is still actually
+ * intact - it caught a real incident where a self-edit replaced most of public/index.html
+ * with a placeholder comment, silently dropping the <script> tag that loads app.js. Neither
+ * typecheck nor the test suite would ever catch that, since it's a static HTML asset, not code.
+ */
+async function checkUiIntegrity(port: number): Promise<string | null> {
+    const pageRes = await fetch(`http://127.0.0.1:${port}/`);
+    if (!pageRes.ok) return `UI check: GET / returned ${pageRes.status}`;
+
+    const html = await pageRes.text();
+    if (!html.includes("<script") || !html.includes("app.js")) {
+        return "UI check: served page no longer includes a <script> tag loading app.js - the page's JavaScript would not run";
+    }
+
+    const scriptRes = await fetch(`http://127.0.0.1:${port}/app.js`);
+    if (!scriptRes.ok) return `UI check: GET /app.js returned ${scriptRes.status}`;
+
+    return null;
 }
 
 /** Runs typecheck, the test suite, and a real boot+health-check against the isolated trial copy. */

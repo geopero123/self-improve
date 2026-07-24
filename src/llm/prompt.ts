@@ -6,7 +6,11 @@ Respond with ONLY a single JSON object, no markdown fences, no commentary outsid
   "summary": "one or two sentences describing what you did",
   "files": [ { "path": "relative/path/to/file.ext", "content": "full file contents" } ]
 }
-Each entry in "files" must contain the FULL contents of that file after your change, not a diff or partial snippet.
+Each entry in "files" must contain the FULL, complete contents of that file after your change - every line,
+including the parts you did not change. NEVER use placeholder comments like "... (unchanged)", "// rest stays
+the same", or any other stand-in for content you're omitting - that produces a broken, truncated file. If you
+are only changing one part of a file, you must still copy out the entire rest of the file byte-for-byte around
+your change.
 Only include files you are creating or changing.
 The "content" value must be a single valid JSON string: escape newlines as \\n and double quotes as \\", on one
 logical JSON string - never use triple quotes or any other non-JSON syntax for it.
