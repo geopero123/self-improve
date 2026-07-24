@@ -43,14 +43,26 @@ export async function runSelfImprove(
             ? `${instruction}\n\nYour previous attempt failed verification with this output:\n${lastError}\n\nFix the issue and try again.`
             : instruction;
 
-        const selectedPaths = await selectRelevantFiles(llm, fullInstruction, allPaths);
+        let selectedPaths: string[];
+        try {
+            selectedPaths = await selectRelevantFiles(llm, fullInstruction, allPaths);
+        } catch (err) {
+            lastError = `File selection step failed: ${err instanceof Error ? err.message : String(err)}`;
+            continue;
+        }
         const contextFiles = await readSourceFiles(selectedPaths);
 
-        const result = await llm.generate({
-            instruction: fullInstruction,
-            contextFiles,
-            systemContext: SYSTEM_CONTEXT
-        });
+        let result;
+        try {
+            result = await llm.generate({
+                instruction: fullInstruction,
+                contextFiles,
+                systemContext: SYSTEM_CONTEXT
+            });
+        } catch (err) {
+            lastError = err instanceof Error ? err.message : String(err);
+            continue;
+        }
 
         if (!result.files.length) {
             lastError = "Model returned no files to change.";

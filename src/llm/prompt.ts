@@ -8,6 +8,8 @@ Respond with ONLY a single JSON object, no markdown fences, no commentary outsid
 }
 Each entry in "files" must contain the FULL contents of that file after your change, not a diff or partial snippet.
 Only include files you are creating or changing.
+The "content" value must be a single valid JSON string: escape newlines as \n and double quotes as \", on one
+logical JSON string - never use triple quotes or any other non-JSON syntax for it.
 `.trim();
 
 export function buildPrompt(request: LLMRequest): string {
