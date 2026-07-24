@@ -1,0 +1,37 @@
+/* Deliberately reset-only. No theme, no colors, no layout opinions beyond basic
+   spacing/readability. The agent is meant to design its own real UI later via a
+   self-improve prompt — this file just keeps the bare version usable in the meantime. */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 1rem;
+    font-family: system-ui, sans-serif;
+    line-height: 1.4;
+}
+
+section {
+    margin-bottom: 2rem;
+}
+
+textarea, input, button {
+    font: inherit;
+}
+
+textarea {
+    width: 100%;
+    min-height: 4rem;
+}
+
+ul {
+    padding-left: 1.2rem;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+    max-width: 100%;
+}

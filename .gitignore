@@ -3,4 +3,5 @@ dist/
 .env
 generated-apps/*
 !generated-apps/.gitkeep
+.self-improve-trials/
 *.log
