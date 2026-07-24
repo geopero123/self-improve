@@ -31,7 +31,8 @@ export class GroqClient implements LLMClient {
             body: JSON.stringify({
                 model: this.model,
                 messages: [{ role: "user", content: prompt }],
-                temperature: 0.2
+                temperature: 0.2,
+                response_format: { type: "json_object" }
             })
         });
 
