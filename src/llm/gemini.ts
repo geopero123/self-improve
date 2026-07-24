@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import type { LLMClient, LLMRequest, LLMResult } from "./index.js";
 import { parseResponse } from "./parseResponse.js";
 
-const DEFAULT_MODEL = "gemini-3-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 const RESPONSE_FORMAT_HINT = `
 Respond with ONLY a single JSON object, no markdown fences, no commentary outside the JSON. Shape:
