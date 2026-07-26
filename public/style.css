@@ -1,8 +1,5 @@
-/* Deliberately reset-only. No theme, no colors, no layout opinions beyond basic
-   spacing/readability. The agent is meant to design its own real UI later via a
-   self-improve prompt — this file just keeps the bare version usable in the meantime. */
-
-*, *::before, *::after {
+*
+, *::before, *::after {
     box-sizing: border-box;
 }
 
