@@ -14,7 +14,7 @@ body {
 section {
     margin-bottom: 2rem;
     animation: fadeIn 0.5s ease-in-out;
-    border-left: 4px solid #007bff;
+    border-left: 4px solid red;
 }
 
 textarea, input, button {
@@ -26,7 +26,7 @@ textarea, input, button {
 
 textarea:focus, input:focus, button:focus {
     outline: none;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
 
 textarea {
@@ -77,14 +77,14 @@ body {
 }
 
 section {
-    border-left: 4px solid #007bff;
+    border-left: 4px solid red;
 }
 
 button {
-    background-color: #007bff;
+    background-color: red;
     color: white;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: darkred;
 }
