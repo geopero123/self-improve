@@ -24,6 +24,17 @@ export async function createApp(name: string, files: LLMFile[], entry = "server.
         await fs.writeFile(target, file.content, "utf8");
     }
 
+    // Generated apps live inside this project, so without their own package.json they inherit its
+    // "type": "module" and every `require(...)` app dies with "require is not defined". Generated
+    // apps are asked for plain CommonJS Node, so pin that here unless the model wrote its own.
+    if (!files.some((f) => path.basename(f.path) === "package.json")) {
+        await fs.writeFile(
+            path.join(dir, "package.json"),
+            JSON.stringify({ type: "commonjs" }, null, 2) + "\n",
+            "utf8"
+        );
+    }
+
     const port = allocatePort();
     const record: AppRecord = { id, name, dir, port, entry, status: "starting", createdAt: Date.now() };
     register(record);
@@ -38,7 +49,13 @@ function startApp(record: AppRecord): void {
     });
     processes.set(record.id, child);
 
-    child.on("exit", () => {
+    // Without this a crashing app just flips to "stopped" with no trace of why.
+    child.stderr?.on("data", (chunk: Buffer) => {
+        console.error(`[app ${record.id}] ${chunk.toString().trimEnd()}`);
+    });
+
+    child.on("exit", (code) => {
+        if (code) console.error(`[app ${record.id}] exited with code ${code}`);
         updateStatus(record.id, "stopped");
         processes.delete(record.id);
     });
