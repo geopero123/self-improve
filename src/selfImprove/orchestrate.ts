@@ -8,6 +8,7 @@ import { rollback } from "./rollback.js";
 import { registerPending } from "./pending.js";
 import { listSourcePaths, readSourceFiles } from "./sourceContext.js";
 import { selectRelevantFiles } from "./selectFiles.js";
+import { rephraseInstruction } from "./rephrase.js";
 import type { TrialInfo, VerifyStep } from "./types.js";
 
 export interface SelfImproveOutcome {
@@ -36,11 +37,15 @@ const SYSTEM_CONTEXT =
  */
 export async function runSelfImprove(
     llm: LLMClient,
-    instruction: string,
-    requireApproval: boolean
+    rawInstruction: string,
+    requireApproval: boolean,
+    onRephrase?: (rephrased: string) => void
 ): Promise<SelfImproveOutcome> {
     const baseCommit = await snapshot();
     const allPaths = await listSourcePaths();
+
+    const instruction = await rephraseInstruction(llm, rawInstruction);
+    if (instruction !== rawInstruction) onRephrase?.(instruction);
 
     let lastError: string | undefined;
 

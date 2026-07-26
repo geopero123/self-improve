@@ -87,7 +87,9 @@ app.post("/api/self-improve", async (req, res) => {
 
     logActivity("pending", `Self-improve: ${instruction}`);
     try {
-        const outcome = await runSelfImprove(getLLM(), instruction, REQUIRE_APPROVAL);
+        const outcome = await runSelfImprove(getLLM(), instruction, REQUIRE_APPROVAL, rephrased => {
+            logActivity("info", `Sharpened instruction: ${rephrased}`);
+        });
         if (outcome.status === "promoted") {
             logActivity("success", `Self-improve applied and promoted: ${outcome.trial?.summary ?? ""}`, outcome);
             requestRestart();
