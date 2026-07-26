@@ -57,3 +57,33 @@ pre {
     from { transform: translateX(-20px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
+
+/* Added thinking dots effect */
+.thinking-dots::after {
+    content: '...';
+    animation: thinkingDots 1s steps(3, end) infinite;
+}
+
+@keyframes thinkingDots {
+    from { content: '.'; }
+    to { content: '...'; }
+}
+
+/* Improved colors */
+body {
+    background-color: #e0e0e0;
+    color: #555;
+}
+
+section {
+    border-left: 4px solid #007bff;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
