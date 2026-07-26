@@ -54,7 +54,12 @@ export function createLLMClient(): LLMClient {
 
     if (provider === "ollama") {
         const numCtx = process.env.OLLAMA_NUM_CTX ? Number(process.env.OLLAMA_NUM_CTX) : undefined;
-        return new OllamaClient(process.env.OLLAMA_BASE_URL, process.env.OLLAMA_MODEL, numCtx);
+        return new OllamaClient(
+            process.env.OLLAMA_BASE_URL,
+            process.env.OLLAMA_MODEL,
+            numCtx,
+            process.env.OLLAMA_KEEP_ALIVE
+        );
     }
 
     throw new Error(`Unknown LLM_PROVIDER "${provider}". Use "groq", "gemini", or "ollama".`);
