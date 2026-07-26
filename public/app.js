@@ -80,10 +80,21 @@ function renderPending() {
     }
 }
 
+async function refreshPending() {
+    const res = await fetch("/api/self-improve/pending");
+    const outcomes = await res.json();
+    pendingTrials.clear();
+    for (const outcome of outcomes) pendingTrials.set(outcome.trial.id, outcome);
+    renderPending();
+}
+
 async function respondToTrial(id, action) {
     await fetch(`/api/self-improve/${id}/${action}`, { method: "POST" });
     pendingTrials.delete(id);
     renderPending();
+    // If this trial was one step of a multi-step plan, the next step's pending trial (or none, if
+    // rejected/finished) appears asynchronously - poll shortly after so it doesn't stay invisible.
+    setTimeout(refreshPending, 1500);
 }
 
 document.getElementById("build-form").addEventListener("submit", async event => {
@@ -121,3 +132,4 @@ document.getElementById("improve-form").addEventListener("submit", async event =
 loadActivityHistory();
 connectActivityStream();
 loadApps();
+refreshPending();

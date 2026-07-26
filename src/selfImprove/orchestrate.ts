@@ -39,13 +39,14 @@ export async function runSelfImprove(
     llm: LLMClient,
     rawInstruction: string,
     requireApproval: boolean,
-    onRephrase?: (rephrased: string) => void
+    onRephrase?: (rephrased: string) => void,
+    skipRephrase = false
 ): Promise<SelfImproveOutcome> {
     const baseCommit = await snapshot();
     const allPaths = await listSourcePaths();
 
-    const instruction = await rephraseInstruction(llm, rawInstruction);
-    if (instruction !== rawInstruction) onRephrase?.(instruction);
+    const instruction = skipRephrase ? rawInstruction : await rephraseInstruction(llm, rawInstruction);
+    if (!skipRephrase && instruction !== rawInstruction) onRephrase?.(instruction);
 
     let lastError: string | undefined;
 

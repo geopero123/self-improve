@@ -4,7 +4,16 @@ loadEnv();
 import express from "express";
 import { PUBLIC_DIR } from "./paths.js";
 import { createLLMClient, type LLMClient } from "./llm/index.js";
-import { runSelfImprove, approvePending, rejectPending } from "./selfImprove/index.js";
+import {
+    planSteps,
+    runSequence,
+    continueSequenceAfterApprove,
+    cancelSequenceAfterReject,
+    approvePending,
+    rejectPending,
+    listPending,
+    type SequenceHooks
+} from "./selfImprove/index.js";
 import { generateApp, listApps } from "./apps/index.js";
 import { appsRouter } from "./proxy.js";
 import { activityBus, logActivity, getHistory, type ActivityEntry } from "./events.js";
@@ -27,6 +36,11 @@ function requestRestart(): void {
         console.log("[server] no IPC channel to supervisor; run via `npm start` for self-improve restarts to take effect");
     }
 }
+
+const sequenceHooks: SequenceHooks = {
+    onLog: (kind, text) => logActivity(kind, text),
+    onPromoted: () => requestRestart()
+};
 
 const app = express();
 app.use(express.json());
@@ -78,6 +92,10 @@ app.post("/api/apps", async (req, res) => {
     }
 });
 
+app.get("/api/self-improve/pending", (_req, res) => {
+    res.json(listPending().map(trial => ({ status: "pending-approval" as const, trial })));
+});
+
 app.post("/api/self-improve", async (req, res) => {
     const instruction = String(req.body?.instruction ?? "").trim();
     if (!instruction) {
@@ -87,15 +105,10 @@ app.post("/api/self-improve", async (req, res) => {
 
     logActivity("pending", `Self-improve: ${instruction}`);
     try {
-        const outcome = await runSelfImprove(getLLM(), instruction, REQUIRE_APPROVAL, rephrased => {
-            logActivity("info", `Sharpened instruction: ${rephrased}`);
-        });
-        if (outcome.status === "promoted") {
-            logActivity("success", `Self-improve applied and promoted: ${outcome.trial?.summary ?? ""}`, outcome);
-            requestRestart();
-        } else if (outcome.status === "pending-approval") {
-            logActivity("pending", `Self-improve verified, waiting for your approval: ${outcome.trial?.summary ?? ""}`, outcome);
-        } else {
+        const llm = getLLM();
+        const steps = await planSteps(llm, instruction);
+        const outcome = await runSequence(llm, steps, REQUIRE_APPROVAL, sequenceHooks);
+        if (outcome.status === "failed") {
             logActivity("error", `Self-improve failed after retries: ${outcome.reason ?? ""}`, outcome);
         }
         res.json(outcome);
@@ -112,6 +125,9 @@ app.post("/api/self-improve/:id/approve", async (req, res) => {
         logActivity("success", `Approved and promoted self-improve: ${trial.summary}`);
         requestRestart();
         res.json({ ok: true });
+        // Continues any queued later steps in the background; the response above doesn't wait on it,
+        // since the next step can take as long as a full self-improve run.
+        continueSequenceAfterApprove(req.params.id, sequenceHooks);
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         res.status(400).json({ error: message });
@@ -123,6 +139,7 @@ app.post("/api/self-improve/:id/reject", async (req, res) => {
         const trial = await rejectPending(req.params.id);
         logActivity("info", `Rejected self-improve: ${trial.summary}`);
         res.json({ ok: true });
+        cancelSequenceAfterReject(req.params.id, sequenceHooks);
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         res.status(400).json({ error: message });
