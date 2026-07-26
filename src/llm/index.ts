@@ -1,5 +1,6 @@
 import { GeminiClient } from "./gemini.js";
 import { GroqClient } from "./groq.js";
+import { OllamaClient } from "./ollama.js";
 
 export interface LLMFile {
     path: string;
@@ -25,9 +26,10 @@ export interface LLMClient {
 
 export { GeminiClient } from "./gemini.js";
 export { GroqClient } from "./groq.js";
+export { OllamaClient } from "./ollama.js";
 export { RateLimitError } from "./errors.js";
 
-/** Picks the LLM backend from env: LLM_PROVIDER=groq (default, free no-card tier) or gemini. */
+/** Picks the LLM backend from env: LLM_PROVIDER=groq (default, free no-card tier), gemini, or ollama (self-hosted, no limits). */
 export function createLLMClient(): LLMClient {
     const provider = (process.env.LLM_PROVIDER ?? "groq").toLowerCase();
 
@@ -50,5 +52,10 @@ export function createLLMClient(): LLMClient {
         return new GeminiClient(apiKey, process.env.GEMINI_MODEL);
     }
 
-    throw new Error(`Unknown LLM_PROVIDER "${provider}". Use "groq" or "gemini".`);
+    if (provider === "ollama") {
+        const numCtx = process.env.OLLAMA_NUM_CTX ? Number(process.env.OLLAMA_NUM_CTX) : undefined;
+        return new OllamaClient(process.env.OLLAMA_BASE_URL, process.env.OLLAMA_MODEL, numCtx);
+    }
+
+    throw new Error(`Unknown LLM_PROVIDER "${provider}". Use "groq", "gemini", or "ollama".`);
 }

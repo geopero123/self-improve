@@ -20,6 +20,13 @@ A personal, self-hosted coding agent. It can:
 
 To use Gemini instead, set `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...` in `.env`.
 
+To use a self-hosted model instead (no rate limits, runs on your own GPU):
+1. Install [Ollama](https://ollama.com) and pull a model, e.g. `ollama pull qwen2.5:7b-instruct`.
+2. Set `LLM_PROVIDER=ollama` in `.env` (`OLLAMA_MODEL`/`OLLAMA_BASE_URL`/`OLLAMA_NUM_CTX` are optional overrides).
+3. Run `ollama serve` (or let the Ollama app run in the background), then `npm start` as usual.
+
+On a 6-12GB VRAM GPU, stick to 7-8B instruct models — anything bigger leaves too little VRAM for context and will silently truncate the source-tree context this app sends on self-edits, which tends to produce broken output. Quality will generally be a step below Groq/Gemini's hosted models at this size, but there's no external rate limit at all.
+
 ## Running it
 
 ```
