@@ -25,6 +25,15 @@ To use a self-hosted model instead (no rate limits, runs on your own GPU):
 2. Set `LLM_PROVIDER=ollama` in `.env` (`OLLAMA_MODEL`/`OLLAMA_BASE_URL`/`OLLAMA_NUM_CTX` are optional overrides).
 3. Run `ollama serve` (or let the Ollama app run in the background), then `npm start` as usual.
 
+Speed notes for small GPUs: Ollama's automatic layer split reserves headroom it often doesn't
+need, stranding a few layers on the CPU — on a 6GB RTX 3050 that measured 16.5 tok/s. Setting
+`OLLAMA_NUM_GPU=99` forces every layer onto the GPU (identical weights and output, purely a
+placement change) and measured 27.5 tok/s, a 1.67x speedup. If a model genuinely doesn't fit,
+Ollama will fail to load it — drop the value or unset it to restore the automatic split.
+Prompt processing is not the bottleneck (~960 tok/s); generation is (~27 tok/s), and the agent
+rewrites whole files, so latency scales with the size of the files being edited, not the size
+of the edit.
+
 On a 6-12GB VRAM GPU, stick to 7-8B instruct models — anything bigger leaves too little VRAM for context and will silently truncate the source-tree context this app sends on self-edits, which tends to produce broken output. Quality will generally be a step below Groq/Gemini's hosted models at this size, but there's no external rate limit at all.
 
 ## Running it

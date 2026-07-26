@@ -54,11 +54,13 @@ export function createLLMClient(): LLMClient {
 
     if (provider === "ollama") {
         const numCtx = process.env.OLLAMA_NUM_CTX ? Number(process.env.OLLAMA_NUM_CTX) : undefined;
+        const numGpu = process.env.OLLAMA_NUM_GPU ? Number(process.env.OLLAMA_NUM_GPU) : undefined;
         return new OllamaClient(
             process.env.OLLAMA_BASE_URL,
             process.env.OLLAMA_MODEL,
             numCtx,
-            process.env.OLLAMA_KEEP_ALIVE
+            process.env.OLLAMA_KEEP_ALIVE,
+            numGpu
         );
     }
 

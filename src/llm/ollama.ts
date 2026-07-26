@@ -20,12 +20,14 @@ export class OllamaClient implements LLMClient {
     private model: string;
     private numCtx: number;
     private keepAlive: string;
+    private numGpu?: number;
 
-    constructor(baseUrl?: string, model?: string, numCtx?: number, keepAlive?: string) {
+    constructor(baseUrl?: string, model?: string, numCtx?: number, keepAlive?: string, numGpu?: number) {
         this.baseUrl = (baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "");
         this.model = model ?? DEFAULT_MODEL;
         this.numCtx = numCtx ?? DEFAULT_NUM_CTX;
         this.keepAlive = keepAlive ?? DEFAULT_KEEP_ALIVE;
+        this.numGpu = numGpu;
     }
 
     async generate(request: LLMRequest): Promise<LLMResult> {
@@ -42,7 +44,15 @@ export class OllamaClient implements LLMClient {
                     stream: false,
                     format: "json",
                     keep_alive: this.keepAlive,
-                    options: { temperature: 0.2, num_ctx: this.numCtx }
+                    options: {
+                        temperature: 0.2,
+                        num_ctx: this.numCtx,
+                        // Ollama's automatic split leaves headroom it doesn't need and strands a
+                        // few layers on the CPU, which dominates latency. Set OLLAMA_NUM_GPU=99 to
+                        // force every layer onto the GPU when it actually fits (identical output,
+                        // just faster); leave unset to keep Ollama's conservative default.
+                        ...(this.numGpu !== undefined ? { num_gpu: this.numGpu } : {})
+                    }
                 })
             });
         } catch (err) {
