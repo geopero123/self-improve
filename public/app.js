@@ -6,6 +6,7 @@ const composerInput = document.getElementById("composer-input");
 const composerSend = document.getElementById("composer-send");
 
 let mode = "improve"; // "improve" | "build"
+let editingApp = null; // { id, name } | null - when set, "build" submissions edit this app in place
 const trialCards = new Map(); // trial id -> DOM element
 let thinkingEl = null;
 let thinkingDotsAnim = null;
@@ -20,6 +21,7 @@ const MODE_PLACEHOLDERS = {
 for (const btn of document.querySelectorAll(".mode-btn")) {
     btn.addEventListener("click", () => {
         mode = btn.dataset.mode;
+        stopEditingApp();
         for (const b of document.querySelectorAll(".mode-btn")) {
             b.classList.toggle("active", b === btn);
             b.setAttribute("aria-selected", String(b === btn));
@@ -33,6 +35,33 @@ for (const btn of document.querySelectorAll(".mode-btn")) {
         });
     });
 }
+
+// ---------- Editing an existing app in place ----------
+
+const editBanner = document.getElementById("edit-banner");
+const editBannerLabel = document.getElementById("edit-banner-label");
+const editBannerCancel = document.getElementById("edit-banner-cancel");
+
+function startEditingApp(app) {
+    mode = "build";
+    editingApp = { id: app.id, name: app.name };
+    for (const b of document.querySelectorAll(".mode-btn")) {
+        b.classList.toggle("active", b.dataset.mode === "build");
+        b.setAttribute("aria-selected", String(b.dataset.mode === "build"));
+    }
+    editBannerLabel.textContent = `Editing "${app.name}"`;
+    editBanner.hidden = false;
+    composerInput.placeholder = `Describe the change you want to make to "${app.name}"...`;
+    composerInput.focus();
+}
+
+function stopEditingApp() {
+    editingApp = null;
+    editBanner.hidden = true;
+    composerInput.placeholder = MODE_PLACEHOLDERS[mode];
+}
+
+editBannerCancel.addEventListener("click", stopEditingApp);
 
 // ---------- Feed rendering ----------
 
@@ -163,6 +192,15 @@ async function loadApps() {
         link.textContent = `${app.name} [${app.status}]`;
         link.target = "_blank";
         li.appendChild(link);
+
+        const editLink = document.createElement("button");
+        editLink.type = "button";
+        editLink.className = "app-edit-btn";
+        editLink.textContent = "Edit";
+        editLink.title = `Ask the agent to revise "${app.name}" in place`;
+        editLink.addEventListener("click", () => startEditingApp(app));
+        li.appendChild(editLink);
+
         appsList.appendChild(li);
     }
     anime({
@@ -295,7 +333,15 @@ composer.addEventListener("submit", async event => {
     showThinking();
 
     try {
-        if (mode === "build") {
+        if (mode === "build" && editingApp) {
+            const res = await fetch(`/api/apps/${editingApp.id}/iterate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ instruction })
+            });
+            if (res.ok) loadApps();
+            stopEditingApp();
+        } else if (mode === "build") {
             const res = await fetch("/api/apps", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

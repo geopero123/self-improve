@@ -96,19 +96,43 @@ body {
     padding: 0.4rem 0;
 }
 
+.apps-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .apps-list li a {
     display: block;
+    flex: 1;
+    min-width: 0;
     padding: 0.5rem 0.65rem;
     border-radius: 10px;
     color: var(--text);
     text-decoration: none;
     font-size: 0.85rem;
     background: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: background-color 0.15s ease;
 }
 
 .apps-list li a:hover {
     background-color: var(--surface-alt);
+}
+
+.app-edit-btn {
+    flex-shrink: 0;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    background: transparent;
+}
+
+.app-edit-btn:hover {
+    background-color: var(--surface-alt);
+    color: var(--text);
 }
 
 /* ---------- Chat area ---------- */
@@ -303,6 +327,31 @@ body {
     background: var(--accent);
     color: var(--accent-text);
     border-color: var(--accent);
+}
+
+.edit-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.8rem;
+    margin-bottom: 0.5rem;
+    background: var(--surface-alt);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.edit-banner #edit-banner-cancel {
+    padding: 0.1rem 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1;
+    background: transparent;
+    color: var(--text-dim);
+}
+
+.edit-banner #edit-banner-cancel:hover {
+    color: var(--text);
 }
 
 .composer-row {

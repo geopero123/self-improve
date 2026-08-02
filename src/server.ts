@@ -14,7 +14,7 @@ import {
     listPending,
     type SequenceHooks
 } from "./selfImprove/index.js";
-import { generateApp, listApps } from "./apps/index.js";
+import { generateApp, iterateApp, listApps } from "./apps/index.js";
 import { appsRouter } from "./proxy.js";
 import { activityBus, logActivity, getHistory, type ActivityEntry } from "./events.js";
 
@@ -88,6 +88,25 @@ app.post("/api/apps", async (req, res) => {
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         logActivity("error", `App build failed: ${message}`);
+        res.status(500).json({ error: message });
+    }
+});
+
+app.post("/api/apps/:id/iterate", async (req, res) => {
+    const instruction = String(req.body?.instruction ?? "").trim();
+    if (!instruction) {
+        res.status(400).json({ error: "instruction is required" });
+        return;
+    }
+
+    logActivity("pending", `Updating app: ${instruction}`);
+    try {
+        const { record, summary } = await iterateApp(getLLM(), req.params.id, instruction);
+        logActivity("success", `App updated: ${record.name} -> /apps/${record.id}/`, { record, summary });
+        res.json({ record, summary });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logActivity("error", `App update failed: ${message}`);
         res.status(500).json({ error: message });
     }
 });

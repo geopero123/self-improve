@@ -8,12 +8,9 @@ import { allocatePort, register, updateStatus, list, type AppRecord } from "./re
 
 const processes = new Map<string, ChildProcess>();
 
-/** Writes a generated app's files to its own isolated folder and starts it as its own process. */
-export async function createApp(name: string, files: LLMFile[], entry = "server.js"): Promise<AppRecord> {
-    const id = randomUUID().slice(0, 8);
-    const dir = path.join(GENERATED_APPS_DIR, id);
+/** Writes files into an app's isolated folder, refusing anything that would escape it. */
+export async function writeAppFiles(dir: string, files: LLMFile[]): Promise<void> {
     await fs.mkdir(dir, { recursive: true });
-
     const resolvedDir = path.resolve(dir);
     for (const file of files) {
         const target = path.resolve(dir, file.path);
@@ -23,6 +20,32 @@ export async function createApp(name: string, files: LLMFile[], entry = "server.
         await fs.mkdir(path.dirname(target), { recursive: true });
         await fs.writeFile(target, file.content, "utf8");
     }
+}
+
+/** Reads every file currently in an app's folder, for handing back to the model as edit context. */
+export async function readAppFiles(dir: string): Promise<LLMFile[]> {
+    const out: LLMFile[] = [];
+    async function walk(abs: string, rel: string): Promise<void> {
+        const entries = await fs.readdir(abs, { withFileTypes: true });
+        for (const entry of entries) {
+            const entryAbs = path.join(abs, entry.name);
+            const entryRel = rel ? `${rel}/${entry.name}` : entry.name;
+            if (entry.isDirectory()) {
+                await walk(entryAbs, entryRel);
+            } else {
+                out.push({ path: entryRel, content: await fs.readFile(entryAbs, "utf8") });
+            }
+        }
+    }
+    await walk(dir, "");
+    return out;
+}
+
+/** Writes a generated app's files to its own isolated folder and starts it as its own process. */
+export async function createApp(name: string, files: LLMFile[], entry = "server.js"): Promise<AppRecord> {
+    const id = randomUUID().slice(0, 8);
+    const dir = path.join(GENERATED_APPS_DIR, id);
+    await writeAppFiles(dir, files);
 
     // Generated apps live inside this project, so without their own package.json they inherit its
     // "type": "module" and every `require(...)` app dies with "require is not defined". Generated
@@ -66,6 +89,22 @@ function startApp(record: AppRecord): void {
     setTimeout(() => {
         if (processes.has(record.id)) updateStatus(record.id, "running");
     }, 500);
+}
+
+/** Kills an app's current process (if any) and starts a fresh one on the same port/id, so its
+ *  /apps/:id/ URL keeps working after its files are edited in place. */
+export function restartApp(record: AppRecord): void {
+    const existing = processes.get(record.id);
+    if (existing) {
+        // The old process's own "exit" handler would otherwise race the new one and flip status
+        // back to "stopped" right after we mark it "starting".
+        existing.removeAllListeners("exit");
+        existing.removeAllListeners("error");
+        existing.kill();
+        processes.delete(record.id);
+    }
+    updateStatus(record.id, "starting");
+    startApp(record);
 }
 
 export function stopApp(id: string): void {
