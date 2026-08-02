@@ -82,7 +82,7 @@ app.post("/api/apps", async (req, res) => {
 
     logActivity("pending", `Building app: ${instruction}`);
     try {
-        const { record, summary } = await generateApp(getLLM(), instruction);
+        const { record, summary } = await generateApp(getLLM(), instruction, msg => logActivity("info", msg));
         logActivity("success", `App ready: ${record.name} -> /apps/${record.id}/`, { record, summary });
         res.json({ record, summary });
     } catch (err) {
@@ -101,7 +101,12 @@ app.post("/api/apps/:id/iterate", async (req, res) => {
 
     logActivity("pending", `Updating app: ${instruction}`);
     try {
-        const { record, summary } = await iterateApp(getLLM(), req.params.id, instruction);
+        const { record, summary } = await iterateApp(
+            getLLM(),
+            req.params.id,
+            instruction,
+            msg => logActivity("info", msg)
+        );
         logActivity("success", `App updated: ${record.name} -> /apps/${record.id}/`, { record, summary });
         res.json({ record, summary });
     } catch (err) {

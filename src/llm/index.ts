@@ -1,5 +1,6 @@
 import { GeminiClient } from "./gemini.js";
 import { GroqClient } from "./groq.js";
+import { GroqPoolClient } from "./groqPool.js";
 import { OllamaClient } from "./ollama.js";
 
 export interface LLMFile {
@@ -29,6 +30,13 @@ export { GroqClient } from "./groq.js";
 export { OllamaClient } from "./ollama.js";
 export { RateLimitError } from "./errors.js";
 
+function splitKeys(value?: string): string[] {
+    return (value ?? "")
+        .split(",")
+        .map(key => key.trim())
+        .filter(Boolean);
+}
+
 /** Picks the LLM backend from env: LLM_PROVIDER=groq (default, free no-card tier), gemini, or ollama (self-hosted, no limits). */
 export function createLLMClient(): LLMClient {
     const provider = (process.env.LLM_PROVIDER ?? "groq").toLowerCase();
@@ -41,7 +49,15 @@ export function createLLMClient(): LLMClient {
                     "and add it to .env."
             );
         }
-        return new GroqClient(apiKey, process.env.GROQ_MODEL);
+
+        const extraPrimaryKeys = splitKeys(process.env.GROQ_API_KEYS_EXTRA);
+        const fallbackKeys = splitKeys(process.env.GROQ_FALLBACK_API_KEYS);
+        const primaryKeys = [apiKey, ...extraPrimaryKeys];
+
+        if (extraPrimaryKeys.length === 0 && fallbackKeys.length === 0) {
+            return new GroqClient(apiKey, process.env.GROQ_MODEL);
+        }
+        return new GroqPoolClient(primaryKeys, fallbackKeys, process.env.GROQ_MODEL);
     }
 
     if (provider === "gemini") {
