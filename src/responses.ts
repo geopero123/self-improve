@@ -1,1 +1,3 @@
-{"function hey(): string { return 'hey'; }"}
+export function hey(): string {
+    return 'hey';
+}
