@@ -153,7 +153,7 @@ async function loadApps() {
     const apps = await res.json();
     appsList.innerHTML = "";
     if (!apps.length) {
-        appsList.innerHTML = '<li class="empty">No apps yet</li>';
+        appsList.innerHTML = '<li class="empty">No apps</li>';
         return;
     }
     for (const app of apps) {
