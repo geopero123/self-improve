@@ -1,90 +1,427 @@
-*
-, *::before, *::after {
+*, *::before, *::after {
     box-sizing: border-box;
 }
 
+:root {
+    --bg: #f7f6f3;
+    --sidebar-bg: #fbfaf8;
+    --surface: #ffffff;
+    --surface-alt: #f0efec;
+    --border: #e7e5e1;
+    --text: #1c1c1a;
+    --text-dim: #8a887f;
+    --accent: #1c1c1a;
+    --accent-text: #ffffff;
+    --success: #1a9e6b;
+    --success-bg: #e7f7f0;
+    --error: #d64545;
+    --error-bg: #fbeaea;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
-    margin: 1rem;
-    font-family: 'Roboto', sans-serif;
-    line-height: 1.4;
-    background-color: #e0e0e0;
-    color: #555;
+    margin: 0;
+    font-family: var(--font);
+    line-height: 1.5;
+    background-color: var(--bg);
+    color: var(--text);
 }
 
-section {
-    margin-bottom: 2rem;
-    animation: fadeIn 0.5s ease-in-out;
-    border-left: 4px solid red;
+.app-shell {
+    display: flex;
+    height: 100vh;
 }
 
-textarea, input, button {
-    font: inherit;
-    border-radius: 4px;
-    padding: 0.75rem;
-    transition: all 0.3s ease;
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 1.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
 }
 
-textarea:focus, input:focus, button:focus {
-    outline: none;
-    box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
 }
 
-textarea {
-    width: 100%;
-    min-height: 4rem;
-    border: 1px solid #ccc;
+.brand-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
 }
 
-ul {
-    padding-left: 1.2rem;
+.brand h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
 }
 
-pre {
+.sidebar-section h2 {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin: 0 0 0.6rem;
+}
+
+.apps-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.apps-list .empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 0.4rem 0;
+}
+
+.apps-list li a {
+    display: block;
+    padding: 0.5rem 0.65rem;
+    border-radius: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.85rem;
+    background: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.apps-list li a:hover {
+    background-color: var(--surface-alt);
+}
+
+/* ---------- Chat area ---------- */
+
+.chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100vh;
+    position: relative;
+}
+
+.chat-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.empty-state {
+    margin: auto;
+    text-align: center;
+    max-width: 420px;
+}
+
+.empty-state h2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+}
+
+.empty-state p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.msg {
+    max-width: 65ch;
+    padding: 0.7rem 1rem;
+    border-radius: 16px;
+    font-size: 0.92rem;
     white-space: pre-wrap;
     word-break: break-word;
-    overflow-x: auto;
-    max-width: 100%;
-    background-color: #fff;
-    border-radius: 4px;
+    opacity: 0;
+}
+
+.msg-user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: var(--accent-text);
+    border-bottom-right-radius: 4px;
+}
+
+.msg-agent {
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+}
+
+.msg-agent[data-kind="error"] {
+    border-left: 3px solid var(--error);
+}
+
+.msg-agent[data-kind="success"] {
+    border-left: 3px solid var(--success);
+}
+
+.msg-agent[data-kind="pending"],
+.msg-agent[data-kind="info"] {
+    border-left: 3px solid var(--text-dim);
+}
+
+.msg-time {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+}
+
+.msg-user .msg-time {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+/* Thinking indicator (driven by anime.js, see app.js) */
+
+.thinking {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.85rem 1.1rem;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    opacity: 0;
+}
+
+.thinking .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+}
+
+/* Pending approval card */
+
+.trial-card {
+    max-width: 65ch;
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
     padding: 1rem;
+    opacity: 0;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+.trial-card p {
+    margin: 0 0 0.6rem;
+    font-size: 0.92rem;
 }
 
-@keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+.trial-card pre {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem;
+    max-height: 260px;
+    overflow: auto;
+    font-size: 0.78rem;
+    margin: 0 0 0.75rem;
 }
 
-/* Added thinking dots effect */
-.thinking-dots::after {
-    content: '...';
-    animation: thinkingDots 1s steps(3, end) infinite;
+.trial-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
-@keyframes thinkingDots {
-    from { content: '.'; }
-    to { content: '...'; }
+.trial-actions button {
+    flex: 1;
+    border-radius: 999px;
 }
 
-/* Improved colors */
-body {
-    background-color: #e0e0e0;
-    color: #555;
+.btn-approve {
+    background: var(--success-bg);
+    color: var(--success);
 }
 
-section {
-    border-left: 4px solid red;
+.btn-reject {
+    background: var(--error-bg);
+    color: var(--error);
 }
+
+/* ---------- Composer ---------- */
+
+.composer {
+    padding: 0 2.5rem 1.5rem;
+    background: var(--bg);
+}
+
+.mode-switch {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+}
+
+.mode-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.mode-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--text-dim);
+}
+
+.mode-btn.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+}
+
+.composer-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.6rem 0.7rem;
+    box-shadow: 0 8px 24px rgba(28, 28, 26, 0.06);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.composer-row:focus-within {
+    border-color: var(--text-dim);
+    box-shadow: 0 10px 28px rgba(28, 28, 26, 0.1);
+}
+
+#composer-input {
+    flex: 1;
+    resize: none;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.92rem;
+    max-height: 200px;
+    padding: 0.45rem 0.4rem;
+}
+
+#composer-input:focus {
+    outline: none;
+}
+
+#composer-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    color: var(--text-dim);
+    border: none;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#composer-send.ready {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+/* ---------- Generic controls ---------- */
 
 button {
-    background-color: red;
-    color: white;
+    font: inherit;
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    border: none;
+    background: var(--surface-alt);
+    color: var(--text);
+    cursor: pointer;
+    transition: filter 0.2s ease;
 }
 
 button:hover {
-    background-color: darkred;
+    filter: brightness(0.96);
+}
+
+button:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--text-dim);
+    outline-offset: 2px;
+}
+
+/* ---------- Scrollbars ---------- */
+
+.chat-feed::-webkit-scrollbar,
+.sidebar::-webkit-scrollbar,
+.trial-card pre::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-feed::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 8px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        align-items: center;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+    }
+
+    .sidebar-section {
+        display: none;
+    }
+
+    .chat-feed, .composer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .msg, .trial-card {
+        max-width: 90%;
+    }
 }
