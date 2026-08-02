@@ -4,36 +4,20 @@
 
 :root {
     --bg: #1c1c1a;
-    --sidebar-bg: #2f2f2f;
-    --surface: #3f3f3f;
-    --surface-alt: #4f4f4f;
-    --border: #5f5f5f;
-    --text: #ffffff;
-    --text-dim: #8a887f;
-    --accent: #1a9e6b;
-    --accent-text: #ffffff;
-    --success: #1a9e6b;
-    --success-bg: #2f7a57;
-    --error: #d64545;
-    --error-bg: #7a2f2f;
+    --sidebar-bg: #232320;
+    --surface: #2a2a27;
+    --surface-alt: #34342f;
+    --border: #3d3d38;
+    --text: #f2f1ed;
+    --text-dim: #9a9890;
+    --accent: #2bb37c;
+    --accent-text: #08150f;
+    --success: #2bb37c;
+    --success-bg: #17332590;
+    --error: #e2685f;
+    --error-bg: #3a1f1c;
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-serif: Georgia, "Times New Roman", serif;
-}
-
-:root {
-    --bg: #1c1c1a;
-    --sidebar-bg: #2f2f2f;
-    --surface: #3f3f3f;
-    --surface-alt: #4f4f4f;
-    --border: #5f5f5f;
-    --text: #ffffff;
-    --text-dim: #8a887f;
-    --accent: #1a9e6b;
-    --accent-text: #ffffff;
-    --success: #1a9e6b;
-    --success-bg: #2f7a57;
-    --error: #d64545;
-    --error-bg: #7a2f2f;
 }
 
 html, body {
@@ -131,11 +115,12 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
 .apps-list li a:hover {
     background-color: var(--surface-alt);
+    transform: translateX(2px);
 }
 
 .app-edit-btn {
@@ -213,6 +198,7 @@ body {
     background: var(--surface);
     border: 1px solid var(--border);
     border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .msg-agent[data-kind="error"] {
@@ -378,13 +364,13 @@ body {
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 0.6rem 0.7rem;
-    box-shadow: 0 8px 24px rgba(28, 28, 26, 0.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .composer-row:focus-within {
-    border-color: var(--text-dim);
-    box-shadow: 0 10px 28px rgba(28, 28, 26, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
 }
 
 #composer-input {
@@ -442,7 +428,7 @@ button:hover {
 
 button:focus-visible,
 textarea:focus-visible {
-    outline: 2px solid var(--text-dim);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
