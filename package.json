@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node supervisor.js",
-    "dev": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
